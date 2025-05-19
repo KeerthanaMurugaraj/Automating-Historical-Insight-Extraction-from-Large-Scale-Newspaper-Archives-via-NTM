@@ -1,1 +1,3 @@
-# Decoding-History-with-Neural-Topic-Modeling-for-Analyzing-Unstructured-Newspaper-Archives
+# Automating Historical Insights: Exploring
+Large-Scale Newspaper Archives with Neural Topic
+Modeling
