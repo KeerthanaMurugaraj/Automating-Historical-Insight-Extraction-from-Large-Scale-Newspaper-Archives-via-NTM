@@ -1,1 +1,1 @@
-# Automating Historical Insights: Exploring Large-Scale Newspaper Archives with Neural Topic Modeling
+# Automated Historical Insight Extraction from Large-Scale Newspaper Archives via Neural Topic Modeling
