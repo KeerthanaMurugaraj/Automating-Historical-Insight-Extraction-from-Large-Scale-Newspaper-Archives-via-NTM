@@ -1,0 +1,36 @@
+# Python 3.10
+# Pinned versions are the ones used in the experiments; the remaining packages
+# were not pinned.
+
+# Topic modeling and evaluation
+bertopic==0.16.3
+octis==1.13.1
+gensim==4.2.0
+top2vec==1.0.34
+hyperopt
+umap-learn
+hdbscan
+scikit-learn
+
+# Embeddings
+torch==2.2.0
+sentence-transformers
+transformers
+datasets==2.18.0
+pyarrow==15.0.2
+
+# Text processing
+spacy
+nltk
+langdetect
+beautifulsoup4
+googletrans
+
+# Data handling and plotting
+numpy
+scipy==1.12.0
+pandas
+swifter
+joblib
+matplotlib
+seaborn
