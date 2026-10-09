@@ -34,3 +34,6 @@ swifter
 joblib
 matplotlib
 seaborn
+
+# Running the notebooks
+jupyter

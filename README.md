@@ -1,5 +1,7 @@
 # Automating Historical Insight Extraction from Large-Scale Newspaper Archives using BERTopic
 
+🌐 **Project page with a worked example:** https://keerthanamurugaraj.github.io/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM/
+
 Historical newspaper archives are hard to analyse at scale: topics shift over decades, OCR introduces noise, and the volume of text rules out manual reading. This project uses [BERTopic](https://github.com/MaartenGr/BERTopic), an embedding-based topic-modeling approach, to extract coherent and interpretable themes from such archives and to trace how they change over time.
 
 The study covers a large collection of historical newspaper articles from the [impresso](https://impresso-project.ch/) project. The articles are translated to English, split into four time periods (1955–1970, 1971–1986, 1987–2002, 2003–2018) and embedded with long-context sentence-embedding models (GTE and Jina). On top of these embeddings we:
@@ -16,6 +18,8 @@ The study covers a large collection of historical newspaper articles from the [i
 ├── README.md
 ├── LICENSE                          MIT License
 ├── requirements.txt                 Python dependencies
+├── example/                         Synthetic dataset and example notebook
+├── docs/                            Project page (GitHub Pages)
 ├── translate/                       Translation of the corpus to English (SLURM)
 │   ├── translate_content.py
 │   ├── translate_slurm.sh
@@ -62,6 +66,24 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk
 [`requirements.txt`](requirements.txt) lists the packages the code imports. Versions are pinned where the version used in the experiments is known, among them `bertopic==0.16.3`, `octis==1.13.1` and `gensim==4.2.0`.
 
 The notebooks expect the data under `datasets/` at the root of the repository and use relative paths. Adjust the paths if your data is stored elsewhere.
+
+## 🚀 Example on a Synthetic Dataset
+
+The newspaper corpus is copyrighted, so the repository includes a small synthetic dataset to try the pipeline without it. The [project page](https://keerthanamurugaraj.github.io/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM/) shows the results of this example, including the interactive topics-over-time chart.
+
+| File | Purpose |
+|---|---|
+| [`example/dummy_newspaper_dataset.csv`](example/dummy_newspaper_dataset.csv) | 2,880 invented newspaper articles dated 1955 to 2018 |
+| [`example/generate_dummy_dataset.py`](example/generate_dummy_dataset.py) | Script that generates the dataset from sentence templates |
+| [`example/bertopic_example.ipynb`](example/bertopic_example.ipynb) | Preprocessing, embeddings, static BERTopic model and topics over time, with outputs |
+| [`docs/`](docs/) | The project page and its figures |
+
+```bash
+cd example
+jupyter notebook bertopic_example.ipynb
+```
+
+The articles are generated from templates, with fictional places, people and events, and are much easier to separate than real newspaper text. The example shows how the workflow runs and what its outputs look like; it is not evidence of how the method performs on real archives.
 
 ## 🧹 Data Cleaning
 

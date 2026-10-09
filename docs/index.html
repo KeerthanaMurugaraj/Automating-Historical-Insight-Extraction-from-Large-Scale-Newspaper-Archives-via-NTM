@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historical Insight Extraction with BERTopic</title>
+<meta name="description" content="Code and a worked example for static and dynamic topic modeling of historical newspaper archives with BERTopic.">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --muted: #5b6470;
+    --border: #e3e0d8;
+    --accent: #8a3b12;
+    --accent-soft: #f4e9e1;
+    --code-bg: #f3f1ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a;
+      --surface: #1d2024;
+      --text: #e7e9ec;
+      --muted: #a2abb5;
+      --border: #30353b;
+      --accent: #f0a678;
+      --accent-soft: #2c231d;
+      --code-bg: #24282d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.65 Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 0 20px 80px; }
+  header.hero { max-width: 920px; margin: 0 auto; padding: 64px 20px 28px; }
+  .kicker {
+    font: 600 13px/1.4 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--accent);
+  }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.15; margin: 12px 0 16px; text-wrap: balance; }
+  h2 {
+    font-size: 26px; line-height: 1.25; margin: 56px 0 12px; padding-top: 28px;
+    border-top: 1px solid var(--border); text-wrap: balance;
+  }
+  h3 { font-size: 19px; margin: 32px 0 8px; }
+  p { margin: 0 0 16px; }
+  .lead { font-size: 20px; color: var(--muted); max-width: 46em; }
+  a { color: var(--accent); }
+  .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .button {
+    font: 600 15px/1 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 12px 18px; border-radius: 6px; text-decoration: none;
+    border: 1px solid var(--accent); color: var(--accent);
+  }
+  .button.primary { background: var(--accent); color: var(--bg); }
+  .note {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 20px 0;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 20px 0; }
+  ol.steps li {
+    counter-increment: step; position: relative; padding: 0 0 18px 52px;
+  }
+  ol.steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 2px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font: 700 15px/34px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; text-align: center;
+  }
+  ol.steps strong { display: block; }
+  ol.steps span { color: var(--muted); }
+  code, pre {
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code-bg); border-radius: 4px;
+  }
+  code { padding: 2px 5px; }
+  pre { padding: 14px 16px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th {
+    font: 600 13px/1.4 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  figure { margin: 20px 0 8px; }
+  figure iframe {
+    display: block; width: 100%; border: 1px solid var(--border); border-radius: 8px; background: #fff;
+  }
+  figcaption { color: var(--muted); font-size: 15px; margin-top: 8px; }
+  footer {
+    max-width: 920px; margin: 0 auto; padding: 24px 20px 48px; color: var(--muted); font-size: 15px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Code and worked example</div>
+  <h1>Automating Historical Insight Extraction from Large-Scale Newspaper Archives using BERTopic</h1>
+  <p class="lead">A pipeline for finding themes in historical newspaper archives and following them over time, with a comparison against classical topic models.</p>
+  <div class="buttons">
+    <a class="button primary" href="https://github.com/KeerthanaMurugaraj/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM">View the code on GitHub</a>
+    <a class="button" href="#example">See the example</a>
+    <a class="button" href="#reuse">Use it on your own data</a>
+  </div>
+</header>
+
+<main>
+
+<h2 id="about">What this project does</h2>
+<p>Historical newspaper archives are hard to analyse at scale. Topics shift over decades, OCR introduces noise, and the volume of text rules out manual reading. This project applies <a href="https://github.com/MaartenGr/BERTopic">BERTopic</a>, an embedding-based topic-modeling approach, to extract coherent themes from such archives and to trace how they change over time.</p>
+<p>The repository accompanies a paper submitted to <em>Digital Scholarship in the Humanities</em> (DSH), currently under peer review.</p>
+
+<h2 id="pipeline">The pipeline</h2>
+<ol class="steps">
+  <li><strong>Clean and translate</strong><span>Remove markup from the raw articles and translate non-English texts to English.</span></li>
+  <li><strong>Split and preprocess</strong><span>Filter short documents, split the corpus into time periods, remove stopwords and lemmatise.</span></li>
+  <li><strong>Embed</strong><span>Represent every document as a vector with a long-context sentence-embedding model (GTE or Jina).</span></li>
+  <li><strong>Static topic model</strong><span>Fit BERTopic once on all documents: UMAP, HDBSCAN and c-TF-IDF, with KeyBERT-inspired topic words.</span></li>
+  <li><strong>Topics over time</strong><span>Group the documents by year and compute how frequent each topic is in each year.</span></li>
+  <li><strong>Compare</strong><span>Score BERTopic against LDA and NMF on topic coherence, topic diversity and runtime.</span></li>
+</ol>
+
+<h2 id="example">Worked example on a synthetic dataset</h2>
+<p>The newspaper corpus used in the paper is copyrighted, so neither the articles nor results derived from them can be shown here. The example below runs steps 2 to 5 on a synthetic dataset that ships with the repository.</p>
+
+<div class="note">
+  <p><strong>About the example data.</strong> The 2,880 articles are invented. They are generated from sentence templates, with fictional places, people and events, and dated 1955 to 2018. Each article belongs to one of nine themes whose share changes over the years. Template-based text is far easier to separate than real newspaper text, so this example shows how the workflow runs and what its outputs look like. It is not evidence of how well the method performs on real archives.</p>
+</div>
+
+<p>Everything shown here is produced by <a href="https://github.com/KeerthanaMurugaraj/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM/blob/main/example/bertopic_example.ipynb"><code>example/bertopic_example.ipynb</code></a>.</p>
+
+<h3>Topics found by the static model</h3>
+<p>BERTopic found nine topics and left no document unassigned. Each one corresponds to one of the nine themes built into the data.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th class="num">Topic</th><th class="num">Documents</th><th>Top words</th><th>Most frequent in</th></tr></thead>
+  <tbody>
+    <tr><td class="num">0</td><td class="num">435</td><td>farmer, farm, agricultural, harvest, cattle, price</td><td>1963, 1969, 1971</td></tr>
+    <tr><td class="num">1</td><td class="num">414</td><td>goal, supporter, league, club, season, match</td><td>1976, 1987, 2012</td></tr>
+    <tr><td class="num">2</td><td class="num">405</td><td>train, railway, traffic, commuter, transport, ticket</td><td>1960, 1962, 1965</td></tr>
+    <tr><td class="num">3</td><td class="num">315</td><td>patient, clinic, doctor, health, influenza, vaccination</td><td>1968, 1969, 1981</td></tr>
+    <tr><td class="num">4</td><td class="num">307</td><td>computer, online, software, website, processor</td><td>1998, 2007, 2014</td></tr>
+    <tr><td class="num">5</td><td class="num">306</td><td>school, library, student, book, pupil, college</td><td>1981, 1998, 2006</td></tr>
+    <tr><td class="num">6</td><td class="num">273</td><td>party, election, vote, opposition, parliament, ballot</td><td>1960, 1965, 2010</td></tr>
+    <tr><td class="num">7</td><td class="num">272</td><td>electricity, power, supply, fuel, oil, energy</td><td>1973, 1974, 2008</td></tr>
+    <tr><td class="num">8</td><td class="num">153</td><td>water, flood, river, rain, fireman, soldier</td><td>1962, 1993, 2002</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Topics over time</h3>
+<p>The chart shows how many documents each topic has per year. Click a topic in the legend to hide it; double-click to show it alone.</p>
+<figure>
+  <iframe src="figures/topics_over_time.html" height="520" loading="lazy" title="Interactive chart of topic frequency per year"></iframe>
+  <figcaption>The peaks match what was built into the data: fuel shortages in 1973–74 and 2008 (topic 7), floods in 1962, 1978, 1993 and 2002 (topic 8), an influenza wave in 1968–69 (topic 3), elections every five years (topic 6), and a steady rise of computing after 1978 (topic 4).</figcaption>
+</figure>
+
+<h3>Following particular events</h3>
+<p>A sudden rise of one topic usually points to an event that was widely reported. The synthetic data contains three kinds of invented events: fuel shortages, floods and an influenza wave. Each chart below follows the topic of one event over the years. Labelled points are years in which the topic's share of the articles is at least twice its usual share.</p>
+<figure>
+  <iframe src="figures/event_fuel_shortages.html" height="400" loading="lazy" title="Interactive chart of the energy topic per year, with peaks in 1973, 1974 and 2008"></iframe>
+  <figcaption><strong>(a) Fuel shortages.</strong> The energy topic rises sharply in 1973 and 1974 and again in 2008, the years of the invented fuel shortages.</figcaption>
+</figure>
+<figure>
+  <iframe src="figures/event_floods.html" height="400" loading="lazy" title="Interactive chart of the flood topic per year, with peaks in 1962, 1978, 1993 and 2002"></iframe>
+  <figcaption><strong>(b) Floods.</strong> The flood topic is rare in most years and peaks in 1962, 1978, 1993 and 2002, the four invented flood years.</figcaption>
+</figure>
+<figure>
+  <iframe src="figures/event_influenza_wave.html" height="400" loading="lazy" title="Interactive chart of the health topic per year, with peaks in 1968 and 1969"></iframe>
+  <figcaption><strong>(c) Influenza wave.</strong> The health topic peaks in 1968 and 1969, the years of the invented influenza wave. The smaller labelled points in 1981 and 1999 are discussed below the table.</figcaption>
+</figure>
+<p>The table compares each topic's share of the articles in those years with its usual share, and lists the words that describe the topic in that year.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Event</th><th class="num">Year</th><th class="num">Share of the year</th><th class="num">Usual share</th><th>Topic words in that year</th></tr></thead>
+  <tbody>
+    <tr><td>Fuel shortages</td><td class="num">1973</td><td class="num">33.3%</td><td class="num">8.9%</td><td>electricity, power, supply, fuel, station</td></tr>
+    <tr><td>Fuel shortages</td><td class="num">1974</td><td class="num">37.8%</td><td class="num">8.9%</td><td>power, electricity, supply, fuel, station</td></tr>
+    <tr><td>Fuel shortages</td><td class="num">2008</td><td class="num">31.1%</td><td class="num">8.9%</td><td>power, electricity, station, supply, fuel</td></tr>
+    <tr><td>Floods</td><td class="num">1962</td><td class="num">31.1%</td><td class="num">4.4%</td><td>flood, water, rain, river, heavy</td></tr>
+    <tr><td>Floods</td><td class="num">1978</td><td class="num">24.4%</td><td class="num">4.4%</td><td>flood, water, river, heavy, rain</td></tr>
+    <tr><td>Floods</td><td class="num">1993</td><td class="num">33.3%</td><td class="num">4.4%</td><td>water, flood, rain, river, heavy</td></tr>
+    <tr><td>Floods</td><td class="num">2002</td><td class="num">33.3%</td><td class="num">4.4%</td><td>water, flood, heavy, rain, river</td></tr>
+    <tr><td>Influenza wave</td><td class="num">1968</td><td class="num">35.6%</td><td class="num">11.1%</td><td>patient, clinic, doctor, health, ray</td></tr>
+    <tr><td>Influenza wave</td><td class="num">1969</td><td class="num">35.6%</td><td class="num">11.1%</td><td>patient, clinic, doctor, health, vaccination</td></tr>
+  </tbody>
+</table>
+</div>
+<p>All nine years are ones in which an event was built into the data. The same rule also flags 1981 and 1999 for the health topic, where no event was built in: with only 45 articles per year, chance alone can double a topic's share. A peak is a reason to read the documents behind it, not proof of an event.</p>
+
+<h3>Topic words</h3>
+<figure>
+  <iframe src="figures/topic_barchart.html" height="640" loading="lazy" title="Bar charts of the highest-scoring words per topic"></iframe>
+  <figcaption>The highest-scoring words of each topic by c-TF-IDF.</figcaption>
+</figure>
+
+<h3>Topic hierarchy</h3>
+<figure>
+  <iframe src="figures/topic_hierarchy.html" height="420" loading="lazy" title="Dendrogram of topic similarity"></iframe>
+  <figcaption>Topics that are close in the tree use similar vocabulary.</figcaption>
+</figure>
+
+<h2 id="reuse">Use it on your own data</h2>
+<p>Install the dependencies and run the example first:</p>
+<pre><code>git clone https://github.com/KeerthanaMurugaraj/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM.git
+cd Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM
+
+conda create -n topic_modeling python=3.10
+conda activate topic_modeling
+pip install -r requirements.txt
+
+cd example
+python generate_dummy_dataset.py      # optional: the dataset is already included
+jupyter notebook bertopic_example.ipynb</code></pre>
+<p>To apply the pipeline to another collection, provide a table with one document per row and at least these columns:</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Column</th><th>Content</th></tr></thead>
+  <tbody>
+    <tr><td><code>uid</code></td><td>A unique identifier for the document</td></tr>
+    <tr><td><code>content</code></td><td>The text of the document</td></tr>
+    <tr><td><code>year</code></td><td>The publication year, used for the topics-over-time analysis</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Then adjust two things in the notebook: the path to your file, and <code>min_cluster_size</code>, which controls how fine-grained the topics are. For a large corpus, start from the BERTopic defaults. The full notebooks for each step, including the comparison with LDA and NMF, are described in the <a href="https://github.com/KeerthanaMurugaraj/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM#readme">README</a>.</p>
+
+<h2 id="license">License and terms of use</h2>
+<p><strong>Code.</strong> Released under the <a href="https://github.com/KeerthanaMurugaraj/Automating-Historical-Insight-Extraction-from-Large-Scale-Newspaper-Archives-via-NTM/blob/main/LICENSE">MIT License</a>. You may use, modify and redistribute it, including for other corpora and research questions, provided the copyright notice and the license text are kept.</p>
+<p><strong>Synthetic example dataset.</strong> Generated for this repository and covered by the same license.</p>
+<p><strong>Newspaper corpus.</strong> Not part of this repository. It is copyrighted and remains subject to the terms of use of the <a href="https://impresso-project.ch/">Impresso</a> project. Access can be requested through the <a href="https://impresso-project.ch/app/">Impresso platform</a>.</p>
+
+<h2 id="cite">Citation</h2>
+<p>If you use this code in academic work, please cite the paper. The entry will be updated on publication.</p>
+<pre><code>@unpublished{murugaraj2025automating,
+  title  = {Automating Historical Insight Extraction from Large-Scale Newspaper Archives using BERTopic},
+  author = {Murugaraj, Keerthana and Lamsiyah, Salima and During, Marten and Theobald, Martin},
+  note   = {Submitted to Digital Scholarship in the Humanities (DSH); under peer review},
+  year   = {2025}
+}</code></pre>
+
+</main>
+
+<footer>
+  University of Luxembourg · Code under the MIT License · Example data is synthetic.
+</footer>
+
+</body>
+</html>
