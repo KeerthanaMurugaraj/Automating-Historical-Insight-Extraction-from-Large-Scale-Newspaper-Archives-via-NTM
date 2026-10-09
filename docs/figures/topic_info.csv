@@ -1,0 +1,10 @@
+Topic,Count,Name,Representation
+0,435,0_farmer_farm_agricultural_harvest,"['farmer', 'farm', 'agricultural', 'harvest', 'cattle', 'price', 'tractor', 'machine', 'cooperative', 'harvesting']"
+1,414,1_goal_supporter_league_club,"['goal', 'supporter', 'league', 'club', 'season', 'match', 'team', 'dropped', 'table', 'derby']"
+2,405,2_train_new_railway_traffic,"['train', 'new', 'railway', 'traffic', 'commuter', 'transport', 'ticket', 'motorist', 'road', 'year']"
+3,315,3_patient_clinic_doctor_health,"['patient', 'clinic', 'doctor', 'health', 'time', 'waiting', 'influenza', 'vaccination', 'child', 'epidemic']"
+4,307,4_computer_online_software_year,"['computer', 'online', 'software', 'year', 'website', 'form', 'citizen', 'allows', 'processor', 'expert']"
+5,306,5_school_received_library_student,"['school', 'received', 'library', 'student', 'donation', 'book', 'end', 'pupil', 'adult', 'college']"
+6,273,6_party_election_vote_opposition,"['party', 'election', 'vote', 'opposition', 'parliament', 'programme', 'public', 'commission', 'confirmed', 'ballot']"
+7,272,7_electricity_power_supply_fuel,"['electricity', 'power', 'supply', 'fuel', 'station', 'price', 'oil', 'energy', 'supplier', 'solar']"
+8,153,8_water_flood_river_heavy,"['water', 'flood', 'river', 'heavy', 'rain', 'home', 'road', 'built', 'fireman', 'soldier']"

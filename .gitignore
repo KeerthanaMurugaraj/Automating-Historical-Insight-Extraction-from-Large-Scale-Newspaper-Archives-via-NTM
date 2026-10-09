@@ -59,7 +59,7 @@ datacheckpoints
 notebooks/evaluation_results/
 
 # Data, trained models and figures (derived from the copyrighted corpus)
-datasets/
-models/
-Figures/
-Document_info_with_topics/
+/datasets/
+/models/
+/Figures/
+/Document_info_with_topics/
